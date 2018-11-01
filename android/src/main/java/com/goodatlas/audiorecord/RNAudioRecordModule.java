@@ -6,11 +6,15 @@ import android.media.MediaRecorder.AudioSource;
 import android.util.Base64;
 import android.util.Log;
 
+import com.facebook.react.bridge.Arguments;
 import com.facebook.react.bridge.Promise;
 import com.facebook.react.bridge.ReactApplicationContext;
+import com.facebook.react.bridge.ReactContext;
 import com.facebook.react.bridge.ReactContextBaseJavaModule;
 import com.facebook.react.bridge.ReactMethod;
 import com.facebook.react.bridge.ReadableMap;
+import com.facebook.react.bridge.WritableMap;
+import com.facebook.react.bridge.WritableNativeMap;
 import com.facebook.react.modules.core.DeviceEventManagerModule;
 
 import java.io.File;
@@ -86,6 +90,7 @@ public class RNAudioRecordModule extends ReactContextBaseJavaModule {
     public void start() {
         isRecording = true;
         recorder.startRecording();
+        final long startTime = System.currentTimeMillis();
 
         Thread recordingThread = new Thread(new Runnable() {
             public void run() {
@@ -102,9 +107,15 @@ public class RNAudioRecordModule extends ReactContextBaseJavaModule {
                         // skip first 2 buffers to eliminate "click sound"
                         if (bytesRead > 0 && ++count > 2) {
                             base64Data = Base64.encodeToString(buffer, Base64.NO_WRAP);
-                            eventEmitter.emit("data", base64Data);
+                            WritableMap map = Arguments.createMap();
+
+                            map.putString("data", base64Data);
+                            map.putDouble("elapsedMS", System.currentTimeMillis() - startTime);
+
+                            eventEmitter.emit("progress", map);
                             os.write(buffer, 0, bytesRead);
                         }
+
                     }
 
                     recorder.stop();

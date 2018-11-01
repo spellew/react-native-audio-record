@@ -9,7 +9,7 @@ AudioRecord.start = () => RNAudioRecord.start();
 AudioRecord.stop = () => RNAudioRecord.stop();
 
 const eventsMap = {
-  data: 'data'
+  progress: 'progress',
 };
 
 AudioRecord.on = (event, callback) => {
